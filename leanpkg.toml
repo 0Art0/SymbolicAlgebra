@@ -1,4 +1,7 @@
 [package]
 name = "SymbolicAlgebra"
 version = "0.1"
-lean_version = "leanprover/lean4:nightly-2021-08-01"
+lean_version = "leanprover/lean4:nightly-2021-08-27"
+
+[dependencies]
+mathlib4 = {git = "https://github.com/leanprover-community/mathlib4", rev = "7ac5698"}

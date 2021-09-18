@@ -5,13 +5,22 @@
   It can be used to write algorithms that return values 
   that must satisfy certain defining properties.
 -/
-structure ValueWithProof {α : Type _} (p : α → Prop) :=
+@[class] structure Prover {α : Type _} (p : α → Prop) :=
   value : α
   proof : p value
 
 -- easier notation
--- the triangle is typed as `\rhd`
-notation ">>" v ":" T " ~ " p => ValueWithProof (λ (v : T) => p)
+notation "#[" v ":" T "]" " ~ " p => Prover (λ (v : T) => p)
 
--- an example
-#check >> x : Nat ~ x.succ > 0
+-- examples
+#check #[x : Nat] ~ (x + 5 > 0)
+
+example : #[x : Nat] ~ (x + 5 = 10) :=
+  {
+    value := 5, 
+    proof := rfl
+  }
+
+-- connection with existential quantifier
+theorem valueWitness {α : Type _} {p : α → Prop} : (#[v : α] ~ p v) → (∃ v : α, p v) :=
+  λ valPrf => ⟨valPrf.value, valPrf.proof⟩
