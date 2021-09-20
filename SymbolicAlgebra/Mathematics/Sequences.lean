@@ -62,7 +62,7 @@ section Instances
   -/
   def FunctionSeq := (λ T : Type => (ℕ → T))
 
-  instance : Indexable FunctionSeq := ⟨λ f => f⟩
+  instance indexableFunctionSeq : Indexable FunctionSeq := ⟨λ f => λ n : ℕ => f n⟩
   
   /-
   A program-with-proof that takes in a list of type `List T` and 
@@ -89,10 +89,18 @@ section Instances
   instance indexableList : Indexable List := ⟨λ l => λ n : ℕ => (finiteListIndex l n).value⟩
 
   /-
+  A function that takes in an ECSequence and returns another ECSequence
+  that is more optimised for performance.
+
+  It is currently just the identity function, but will be changed when needed.
+  -/
+  def ECSequence.Optimise {T : Type} [Inhabited T] {t : T} : ECSequence T t → ECSequence T t := λ ecs => ecs
+
+  /-
   A function to generate an eventually constant sequence from a list.
   -/
   def ECSequence.mkList {T : Type} [Inhabited T] (l : List T) : ECSequence T Inhabited.default := 
-    {
+    ECSequence.Optimise ({
       seqtype := List,
       indexable := indexableList, 
       values := l, 
@@ -103,7 +111,33 @@ section Instances
         exact (finiteListIndex l n).proof h
         })
       }
-    }
+    })
+
+  /-
+  A function to generate an eventually constant sequence from a function.
+
+  Th eventually constant sequence generated matches with the input function `f`
+  on the first `c` values, and later takes the default value.
+  -/
+  def ECSequence.mkFunction {T : Type} [Inhabited T] (f : ℕ → T) (c : ℕ) : ECSequence T Inhabited.default :=
+    ECSequence.Optimise ({
+      seqtype := FunctionSeq,
+      indexable := indexableFunctionSeq,
+      values := (λ n : ℕ => 
+                  if n ≥ c then
+                    Inhabited.default
+                  else
+                    f n),
+      eventuallyConstant := {value := c, proof := λ (m : ℕ) h => by {
+          simp
+          have : (Indexable.index (α := FunctionSeq) (fun n => if n ≥ c then Inhabited.default else f n) m) = (if m ≥ c then Inhabited.default else f m) := rfl;
+          rw [this, if_pos]
+          simp
+          exact h
+        }
+      }
+    
+    })
 
   /-
   Coercion from ECSequences to Sequences.
@@ -112,7 +146,7 @@ section Instances
   ⟨λ es => {seqtype := es.seqtype, indexable := es.indexable, values := es.values}⟩
 
   /-
-    A method for extracting the `n`th term of an eventually constant sequence `s`.
+  A method for extracting the `n`th term of an eventually constant sequence ecs`.
   -/
   def ECSeqIndex {T : Type} [Inhabited T] {c : T} (ecs : ECSequence T c) (n : ℕ) : T := ecs.indexable.index (ecs.values) n
 
