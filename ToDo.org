@@ -5,7 +5,13 @@
 
 ** Mathematical preliminaries
 
-*** TODO Fields
+*** ONGOING Rational numbers
+
+Implement algebraic operations.
+
+*** FINISHING Fields
+
+Need to check if inverses work as intended.
 
 *** TODO Polynomials
 
